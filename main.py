@@ -2,21 +2,28 @@ import cv2
 import pytesseract
 from pdf2image import convert_from_path
 import re
-paginas = convert_from_path("portaria.pdf")
+import os
 
-resultado = ""
-for pagina in paginas:
-    pagina.save("img.png", "PNG")    
-    img = cv2.imread("img.png")
-    texto = pytesseract.image_to_string(img)
-    resultado += texto
+caminho = os.getcwd()
+arquivos = [arquivo for arquivo in os.listdir(caminho) if arquivo.lower().endswith('.pdf')]
+
+for arquivo in arquivos:
+    nome_arquivo = os.path.join(caminho, arquivo)
+    paginas = convert_from_path(nome_arquivo)
+    resultado = ""
+    for pagina in paginas:
+        pagina.save("img.png", "PNG")    
+        img = cv2.imread("img.png")
+        texto = pytesseract.image_to_string(img)
+        resultado += texto
+        
+    def remove_quebra_linha(resultado):
+        resultado = re.sub(r'(?<!\n)\n(?!\n)', ' ', resultado)
+        return resultado
+
+    resultado_formatado = remove_quebra_linha(resultado)
+    nome_arquivo_txt = os.path.splitext(arquivo)[0] + ".txt"
+    caminho_arquivo_txt = os.path.join(caminho, nome_arquivo_txt)
     
-#paragrafos = resultado.split("\n")
-#paragrafo_sem_quebra = [paragrafo.strip() for paragrafo in paragrafos]
-#resultado = "\n".join(paragrafo_sem_quebra)
-#def remove_line_breaks(text):
-#    text = re.sub(r'(?<!\n)\n(?!\n)', ' ', text)
-#    return text
-#resultado_formatado = remove_line_breaks(resultado)
-with open("texto.txt", "w") as arquivo:
-    print(resultado, file = arquivo)
+    with open(nome_arquivo_txt, "w") as arquivo:
+        print(resultado_formatado, file = arquivo)
